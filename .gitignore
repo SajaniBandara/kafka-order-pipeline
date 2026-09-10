@@ -1,0 +1,17 @@
+# Kafka distribution + broker data (downloaded/generated locally)
+tools/
+kafka-logs/
+D:/kafka-logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
