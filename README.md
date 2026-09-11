@@ -63,6 +63,14 @@ a fresh KRaft storage directory.
 > re-apply the patch (replace the `for %%i in ("%BASE_DIR%\libs\*")` loop near
 > the *"Classpath addition for release"* comment with
 > `call :concat "%BASE_DIR%\libs\*"`).
+>
+> **Always stop the broker with `scripts\stop-kafka.ps1` (or Ctrl+C in its
+> window) — never close the window or `taskkill` the java process.** A hard
+> kill skips the clean-shutdown marker; on the next start Kafka tries to
+> recover the log dir and can corrupt it (`AccessDeniedException` renaming a
+> "stray" partition dir, or `DUPLICATE_BROKER_REGISTRATION`). If that happens,
+> the fix is `scripts\setup-kafka.ps1` again (wipes `D:\kafka-logs` and
+> reformats — you lose whatever was in the topics, which is fine for a demo).
 
 ---
 
@@ -74,6 +82,8 @@ Open **4 terminals** in the project root.
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\start-kafka.ps1
 ```
+When you're done, stop it with `scripts\stop-kafka.ps1` (or Ctrl+C in this
+window) — see the Windows note above about why a hard kill is a problem.
 
 **Terminal 2 — create topics** (once per fresh broker):
 ```powershell
@@ -132,6 +142,7 @@ src/consumer.py        deserialize + retry + DLQ + running-average aggregation
 src/dlq_viewer.py      dump the DLQ with failure reasons
 scripts/setup-kafka.ps1  extract + format Kafka (KRaft)
 scripts/start-kafka.ps1  run the broker
+scripts/stop-kafka.ps1   stop the broker cleanly (always use this, not taskkill)
 ```
 
 ## Reset between demo runs
