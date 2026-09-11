@@ -147,9 +147,23 @@ scripts/stop-kafka.ps1   stop the broker cleanly (always use this, not taskkill)
 
 ## Reset between demo runs
 
+> **Do not use `kafka-topics.bat --delete` on Windows.** Topic deletion doesn't
+> reliably clean up the partition directory before the metadata log moves on,
+> so the next broker start finds a "stray" directory with a stale topic ID,
+> can't rename it away (`AccessDeniedException`), and the whole log dir goes
+> offline. Use one of the two safe resets below instead.
+
+**To replay the same messages** (fastest — just rewinds offsets, topics untouched):
 ```powershell
-# replay all messages from the start
-python -c "print('stop the consumer first (Ctrl+C)')"
+# stop the consumer first (Ctrl+C), then:
 tools\kafka\bin\windows\kafka-consumer-groups.bat --bootstrap-server localhost:9092 `
   --group order-processors --reset-offsets --to-earliest --topic orders --execute
+```
+
+**For a true clean slate** (empty topics, fresh offsets — safe, no delete involved):
+```powershell
+# stop the broker first (scripts\stop-kafka.ps1 or Ctrl+C in its window), then:
+powershell -ExecutionPolicy Bypass -File scripts\setup-kafka.ps1   # wipes D:\kafka-logs, reformats
+powershell -ExecutionPolicy Bypass -File scripts\start-kafka.ps1
+python src\create_topics.py
 ```
